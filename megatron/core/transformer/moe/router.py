@@ -44,7 +44,13 @@ class Router(ABC, MegatronModule):
         )
         if config.perform_initialization:
             config.init_method(self.weight)
-        self.weight.data = self.weight.data.to(dtype=config.params_dtype)
+        #######################################
+        # Orthogonal initialization for the gate weights and keep it fixed
+        self.weight.data = torch.nn.init.orthogonal_(self.weight.data.to(dtype=torch.float32)).to(
+            dtype=config.params_dtype
+        )
+        self.weight.requires_grad = False
+        #######################################
         setattr(self.weight, 'sequence_parallel', config.sequence_parallel)
 
     def gating(self, input: torch.Tensor):
